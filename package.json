@@ -1,0 +1,49 @@
+{
+  "name": "pranoy-living-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "audit:static": "node scripts/static-audit.mjs",
+    "check": "npm run audit:static && npm run audit:assets && npm run typecheck && npm run lint",
+    "prelaunch": "node scripts/prelaunch-audit.mjs",
+    "audit:assets": "node scripts/asset-audit.mjs",
+    "test": "npm run check && npm run test:e2e",
+    "smoke": "node scripts/smoke.mjs",
+    "ready": "npm run prelaunch && npm test && npm run build"
+  },
+  "dependencies": {
+    "@gsap/react": "^2.1.0",
+    "@radix-ui/react-dialog": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.2.0",
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
+    "gsap": "^3.13.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.185.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.185.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "packageManager": "npm@10.9.2"
+}
