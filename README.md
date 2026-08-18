@@ -1,8 +1,9 @@
 # Pranoy Mukherjee — Living Workspace Portfolio
 
-> **Resuming work on this project? Read [`docs/START-HERE.md`](docs/START-HERE.md) first.**
-> It carries the current verified state, how the system works, every bug already
-> found and fixed, what is left, and what is parked for later.
+> **Resuming work on this project?** Read `docs/START-HERE.md` in your local
+> checkout first. It carries the current verified state, how the system works, every
+> bug already found and fixed, what is left, and what is parked for later.
+> The `docs/` folder is intentionally not published to this repository.
 
 A deploy-ready portfolio template built around a warm editorial visual system, product-grade UI, a reactive WebGL point-cloud portrait, procedural 3D workspace objects, a scroll-driven hero-to-bento handoff, expandable project stories, architecture X-Ray views, a mobile navigation system, and optional server-side contact delivery.
 
@@ -128,15 +129,13 @@ BASE_URL=https://yourdomain.com npm run smoke
 
 ## Customize first
 
-All portfolio copy is centralized under `src/content/`. See `docs/CUSTOMIZATION.md` for the exact replacement checklist.
+All portfolio copy is centralized under `src/content/`. The exact replacement checklist is in the local `docs/PLAYBOOK.md`.
 
 ## Documentation
 
-- `docs/ARCHITECTURE.md`
-- `docs/DESIGN_SYSTEM.md`
-- `docs/FEATURE_MATRIX.md`
-- `docs/CUSTOMIZATION.md`
-- `docs/QA.md`
-- `docs/DEPLOYMENT.md`
-- `docs/BACKEND.md`
-- `docs/HANDOFF.md`
+Working documentation lives in `docs/` in the local checkout and is deliberately kept
+out of version control, so these files are not part of this repository:
+
+- `docs/START-HERE.md` — current state, how to run it, decisions, what is left
+- `docs/REFERENCE.md` — architecture, design system, backend, feature matrix
+- `docs/PLAYBOOK.md` — content replacement, phase plan, QA, deployment

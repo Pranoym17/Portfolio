@@ -50,7 +50,7 @@ for (const [relative, shippedHash] of shippedPlaceholderHashes.entries()) {
 if (failures.length) {
   console.error("Pre-launch audit blocked public launch:\n");
   failures.forEach((failure) => console.error(`- ${failure}`));
-  console.error("\nComplete docs/CUSTOMIZATION.md, then run this command again.");
+  console.error("\nComplete docs/PLAYBOOK.md Part 1, then run this command again.");
   process.exit(1);
 }
 
