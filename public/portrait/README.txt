@@ -1,1 +1,0 @@
-Replace portrait-source.png with a transparent-background portrait of you. Keep roughly portrait orientation. The WebGL point cloud samples the alpha mask automatically. portrait-fallback.webp is the no-WebGL/mobile fallback; replace it with a pre-rendered point-cloud version of your photo if desired.
