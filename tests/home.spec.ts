@@ -8,9 +8,9 @@ test("core recruiter path is visible and navigable", async ({ page }, testInfo) 
 
   if (testInfo.project.name === "mobile") {
     await page.getByRole("button", { name: "Open navigation menu" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: /Work/ }).click();
+    await page.getByRole("dialog").getByRole("button", { name: /Projects/ }).click();
   } else {
-    await page.getByRole("link", { name: "Work", exact: true }).click();
+    await page.getByRole("link", { name: "Projects", exact: true }).click();
   }
   await expect(page.getByRole("heading", { level: 2, name: /brought to life/i })).toBeVisible();
   await expect(page.locator("#work").getByRole("heading", { level: 3, name: "Shared AI Memory Layer" })).toBeVisible();

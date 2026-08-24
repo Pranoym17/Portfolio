@@ -19,5 +19,15 @@ export const coffeeNotes = [
   "Okay, that's enough caffeine.",
 ] as const;
 
+/**
+ * Notebook easter egg: pressing or dragging the notebook turns a page. Each
+ * interaction advances one line, then holds on the last.
+ */
+export const notebookNotes = [
+  "Everything here started on paper.",
+  "Most of these never made it past the page.",
+  "A few did. They are in the work section.",
+] as const;
+
 /** Shown after the Konami code. Deliberately understated — no score, no game. */
 export const konamiNote = "↑↑↓↓←→←→BA — nothing unlocked. Just respect.";

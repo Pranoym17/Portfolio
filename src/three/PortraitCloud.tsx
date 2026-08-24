@@ -12,6 +12,7 @@ const vertexShader = `
   uniform vec2 uPointer;
   uniform float uDisperse;
   uniform float uRepulsion;
+  uniform float uPixelScale;
 
   void main() {
     vec3 p = position;
@@ -33,7 +34,12 @@ const vertexShader = `
 
     vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
     float perspective = clamp(6.4 / -mvPosition.z, 0.65, 2.2);
-    gl_PointSize = (2.0 + aSeed * 1.45) * perspective;
+    // Sized against the sample spacing: denser sampling needs smaller points or
+    // neighbouring dots merge into a solid mass and the tonal detail is lost.
+    // uPixelScale keeps that spacing constant in CSS pixels — point size is a raw
+    // device-pixel value, so without it the cloud thins out to nothing on a large
+    // canvas and clogs on a small one.
+    gl_PointSize = (1.3 + aSeed * 0.95) * perspective * uPixelScale;
     gl_Position = projectionMatrix * mvPosition;
     vColor = aColor;
   }
@@ -55,6 +61,34 @@ type PointBuffers = {
   seeds: Float32Array;
   colors: Float32Array;
 };
+
+/**
+ * Tone mapping for the cloud.
+ *
+ * The portrait's own luminance drives point colour, not just depth. Painting
+ * every point one flat cream throws away the only information that makes a face
+ * readable — without this ramp the cloud is an abstract dot field regardless of
+ * how good the source photo is.
+ *
+ * SHADOW sits above the page background (#18130f) rather than at it, so dark
+ * points still register as mass instead of disappearing into a hole.
+ */
+const SHADOW: [number, number, number] = [0.36, 0.31, 0.28];
+const LIGHT: [number, number, number] = [1.0, 0.97, 0.9];
+const ACCENT: [number, number, number] = [1.0, 0.3, 0.16];
+
+/** Sample density. Raising these resolves facial features; they drive point count quadratically. */
+const SAMPLE_WIDTH = { desktop: 240, compact: 170 };
+
+/**
+ * Most photographic subjects occupy the middle of the luminance range, so a raw
+ * 0..1 mix produces mush. Stretch the useful band across the full ramp.
+ */
+function tone(luminance: number) {
+  const t = (luminance - 0.12) / (0.78 - 0.12);
+  const clamped = Math.min(1, Math.max(0, t));
+  return clamped * clamped * (3 - 2 * clamped); // smoothstep
+}
 
 function fallbackBuffers(compact: boolean): PointBuffers {
   const points: number[] = [];
@@ -86,7 +120,7 @@ async function imageBuffers(src: string, compact: boolean): Promise<PointBuffers
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      const width = compact ? 110 : 150;
+      const width = compact ? SAMPLE_WIDTH.compact : SAMPLE_WIDTH.desktop;
       const height = Math.round(width * (img.height / img.width));
       const canvas = document.createElement("canvas");
       canvas.width = width;
@@ -114,8 +148,20 @@ async function imageBuffers(src: string, compact: boolean): Promise<PointBuffers
           const z = radial * 0.14 + (1 - luminance) * 0.08 + seed * 0.025;
           positions.push(px, py, z);
           seeds.push(seed);
-          const accent = px > 0.05 && py > 0.15 && seed > 0.58;
-          colors.push(accent ? 1.0 : 0.78, accent ? 0.30 : 0.83, accent ? 0.16 : 0.79);
+          // Colour carries the photograph's own light and shade, which is what
+          // makes the face legible. Accents ride the highlights so they read as
+          // rim light rather than as noise scattered over the portrait.
+          const t = tone(luminance);
+          const accent = t > 0.72 && px > 0.05 && seed > 0.74;
+          if (accent) {
+            colors.push(ACCENT[0], ACCENT[1], ACCENT[2]);
+          } else {
+            colors.push(
+              SHADOW[0] + (LIGHT[0] - SHADOW[0]) * t,
+              SHADOW[1] + (LIGHT[1] - SHADOW[1]) * t,
+              SHADOW[2] + (LIGHT[2] - SHADOW[2]) * t,
+            );
+          }
           index += 1;
         }
       }
@@ -137,7 +183,7 @@ export function PortraitCloud({
 }) {
   const [buffers, setBuffers] = useState<PointBuffers>(() => fallbackBuffers(compact));
   const material = useRef<THREE.ShaderMaterial>(null);
-  const { pointer } = useThree();
+  const { pointer, size, viewport } = useThree();
 
   useEffect(() => {
     let cancelled = false;
@@ -163,6 +209,9 @@ export function PortraitCloud({
     material.current.uniforms.uTime.value = state.clock.elapsedTime;
     material.current.uniforms.uPointer.value.set(pointer.x * 1.3, pointer.y * 1.6);
     material.current.uniforms.uRepulsion.value = reducedMotion ? 0 : 1;
+    // Reference height is the 900px-tall desktop the composition was tuned at.
+    const pixelScale = (size.height / 820) * Math.min(viewport.dpr, 2);
+    material.current.uniforms.uPixelScale.value = Math.min(3.2, Math.max(0.8, pixelScale));
     const p = progressRef.current;
     material.current.uniforms.uDisperse.value = reducedMotion ? 0 : Math.max(0, (p - 0.44) / 0.5);
   });
@@ -180,6 +229,7 @@ export function PortraitCloud({
           uPointer: { value: new THREE.Vector2() },
           uDisperse: { value: 0 },
           uRepulsion: { value: 1 },
+          uPixelScale: { value: 1 },
         }}
       />
     </points>

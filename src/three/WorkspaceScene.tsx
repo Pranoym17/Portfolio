@@ -22,6 +22,12 @@ export interface WorkspaceInteractions {
   onCoffeeClick?: () => void;
   /** Double-clicking the laptop reveals the hidden terminal. */
   onLaptopOpen?: () => void;
+  /** Notebook easter egg — pressing or dragging the notebook turns a page. */
+  onNotebookTurn?: () => void;
+}
+
+function clamp(value: number, limit: number) {
+  return Math.min(limit, Math.max(-limit, value));
 }
 
 export function WorkspaceScene({
@@ -46,6 +52,10 @@ export function WorkspaceScene({
   // The LED is the only hover state that must reach the material, so it is the one
   // piece of React state here; everything else stays in the render loop.
   const [led, setLed] = useState(false);
+  // Notebook drag. Held in refs because pointer movement is high-frequency input
+  // and must never reach React state.
+  const notebookTilt = useRef({ x: 0, z: 0 });
+  const notebookDrag = useRef({ active: false, originX: 0, originY: 0 });
 
   const hint = useCallback(
     (label: string | null) => {
@@ -77,6 +87,8 @@ export function WorkspaceScene({
       to: [number, number, number],
       baseRot: [number, number, number],
       floatStrength: number,
+      /** Extra rotation from direct manipulation; damps back to zero on release. */
+      tilt?: { x: number; z: number },
     ) => {
       const group = ref.current;
       if (!group) return;
@@ -85,26 +97,41 @@ export function WorkspaceScene({
       group.position.x = MathUtils.lerp(from[0], to[0], t) * spread + px * 0.035;
       group.position.y = MathUtils.lerp(from[1], to[1], t) + idle + py * 0.02;
       group.position.z = MathUtils.lerp(from[2], to[2], t);
-      group.rotation.x = MathUtils.damp(group.rotation.x, baseRot[0] - py * 0.025, 4, delta);
+      group.rotation.x = MathUtils.damp(group.rotation.x, baseRot[0] - py * 0.025 + (tilt?.x ?? 0), 4, delta);
       group.rotation.y = MathUtils.damp(group.rotation.y, baseRot[1] + px * 0.04, 4, delta);
-      group.rotation.z = MathUtils.damp(group.rotation.z, baseRot[2] + idle * 0.05, 4, delta);
+      group.rotation.z = MathUtils.damp(group.rotation.z, baseRot[2] + idle * 0.05 + (tilt?.z ?? 0), 4, delta);
     };
+
+    // Spring the notebook back once the pointer lets go.
+    if (!notebookDrag.current.active) {
+      notebookTilt.current.x = MathUtils.damp(notebookTilt.current.x, 0, 5, delta);
+      notebookTilt.current.z = MathUtils.damp(notebookTilt.current.z, 0, 5, delta);
+    }
 
     if (desktop) {
       // Portrait anchors right of centre; everything else orbits it and stays clear
       // of the face box (roughly x 0..1.7, y 0.9..1.9).
       // Detail faces (PCB traces, notebook sketch) sit on +Y, so their groups need a
       // POSITIVE x-rotation to tip those surfaces toward the camera at +Z.
-      setGroup(portrait, [0.85, 0.45, -0.3], [0.2, 0.12, -0.45], [0, -0.03, 0], 0.025);
-      setGroup(laptop, [-0.9, -1.42, 0.7], [-1.75, -0.78, -0.12], [0.05, -0.2, -0.04], 0.032);
-      setGroup(pcb, [1.58, -1.36, 0.5], [1.95, -0.82, 0.05], [0.5, 0.24, -0.1], 0.042);
-      setGroup(notebook, [-1.68, -0.3, 0.32], [1.92, 0.82, -0.08], [0.62, 0.12, 0.16], 0.028);
+      // Hero layout is an arc, not a scatter. The eye enters upper-left at the
+      // coffee, runs down the left column (notebook over laptop, sharing one
+      // y-rotation so they read as a single stack), crosses the bottom at the
+      // headphones and lifts back up to the board on the right. Objects sit on a
+      // stepped vertical ladder rather than piling into one low band, and every
+      // one was pushed radially outward from the portrait so the face keeps its
+      // own clear space and reads as the focal point.
+      setGroup(portrait, [0.92, 0.5, -0.3], [0.2, 0.12, -0.45], [0, -0.03, 0], 0.025);
+      // Left column, shared -0.2 y-rotation: one stack, consistent perspective.
+      setGroup(notebook, [-1.58, -0.06, 0.34], [1.92, 0.82, -0.08], [1.0, -0.2, 0.16], 0.028, notebookTilt.current);
+      setGroup(laptop, [-1.3, -1.16, 0.66], [-1.75, -0.78, -0.12], [0.05, -0.2, -0.04], 0.032);
       // Upper-left gap: the top-right is occupied by the "Currently building" HTML card.
-      setGroup(coffee, [-1.32, 1.22, 0.45], [-1.82, 0.88, 0], [-0.15, 0.16, -0.12], 0.035);
-      // Second personal object. The low centre-right gap between the laptop and the
-      // board is the only slot wide enough for the headband — upper-left fouls the
-      // hero copy and the notebook, which is why the earlier attempt was pulled.
-      setGroup(headphones, [0.42, -1.68, 0.62], [0.15, -1.82, -0.05], [0.26, 0.42, -0.12], 0.03);
+      setGroup(coffee, [-1.44, 1.16, 0.44], [-1.82, 0.88, 0], [-0.15, 0.16, -0.12], 0.035);
+      // Second personal object, sitting at the base of the arc. The low centre gap
+      // is the only slot wide enough for the headband — upper-left fouls the hero
+      // copy and the notebook, which is why the earlier attempt was pulled.
+      setGroup(headphones, [0.46, -1.72, 0.58], [0.15, -1.82, -0.05], [0.26, 0.42, -0.12], 0.03);
+      // Right arm of the arc, clear of the portrait's lower edge.
+      setGroup(pcb, [1.86, -1.24, 0.48], [1.95, -0.82, 0.05], [0.5, 0.24, -0.1], 0.042);
     } else {
       setGroup(portrait, [0, 0.55, 0], [0, 0.1, -0.5], [0, 0, 0], 0.018);
       setGroup(laptop, [0, -1.72, 0.35], [-0.7, -1.05, 0], [-0.12, -0.05, 0], 0.02);
@@ -142,7 +169,28 @@ export function WorkspaceScene({
         </group>
 
         {!compact && (
-          <group ref={notebook} onPointerOver={() => hint("DRAG")} onPointerOut={() => hint(null)}>
+          <group
+            ref={notebook}
+            onPointerOver={() => hint("DRAG")}
+            onPointerOut={() => {
+              hint(null);
+              notebookDrag.current.active = false;
+            }}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              notebookDrag.current = { active: true, originX: event.point.x, originY: event.point.y };
+              interactions?.onNotebookTurn?.();
+            }}
+            onPointerUp={() => {
+              notebookDrag.current.active = false;
+            }}
+            onPointerMove={(event) => {
+              if (!notebookDrag.current.active) return;
+              // Tip the page toward the drag; the frame loop springs it back on release.
+              notebookTilt.current.x = clamp((event.point.y - notebookDrag.current.originY) * 0.7, 0.24);
+              notebookTilt.current.z = clamp((notebookDrag.current.originX - event.point.x) * 0.7, 0.24);
+            }}
+          >
             <Notebook />
           </group>
         )}

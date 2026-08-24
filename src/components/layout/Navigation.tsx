@@ -6,9 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { siteConfig } from "@/content/site";
 import { ExternalIcon } from "@/components/ui/ExternalIcon";
 
+// The `id` values are the section anchors and are referenced by the command
+// palette, the terminal and the hero CTA — only the labels and their order are
+// presentation. Experience leads because it is the entry recruiters scan first.
 const items = [
-  { id: "work", label: "Work" },
   { id: "experience", label: "Experience" },
+  { id: "work", label: "Projects" },
   { id: "about", label: "About" },
   { id: "contact", label: "Contact" },
 ];

@@ -483,13 +483,17 @@ em {
 .hero-now-card {
   position: absolute;
   z-index: 5;
-  top: 18%;
-  right: clamp(1.2rem, 7vw, 8rem);
-  width: 13rem;
+  top: 16%;
+  /* Inset matches the page gutter. The rotation throws the corners out past the
+     box, so the minimum has to clear that too or the card clips on narrow frames. */
+  right: clamp(1.75rem, 6vw, 7rem);
+  width: min(13rem, 34vw);
+  max-width: calc(100vw - 3.5rem);
   display: grid;
   gap: .5rem;
   padding: 1rem 1.1rem;
-  transform: rotate(2.4deg);
+  transform: rotate(1.8deg);
+  transform-origin: 100% 0;
   border: 1px solid rgba(255,160,120,.21);
   border-radius: .85rem;
   background: rgba(44,28,20,.74);
@@ -1699,8 +1703,16 @@ em {
   color: var(--accent-2);
 }
 .workspace-note-coffee[data-active="true"] { opacity: .9; }
+.workspace-note-notebook {
+  /* Sits just above the notebook and clear of the hero CTA column. */
+  left: 50%;
+  top: 34%;
+  color: var(--accent-2);
+}
+.workspace-note-notebook[data-active="true"] { opacity: .9; }
 @media (prefers-reduced-motion: no-preference) {
-  .workspace-note-coffee { animation: note-in var(--motion-medium, 320ms) var(--ease, ease); }
+  .workspace-note-coffee,
+  .workspace-note-notebook { animation: note-in var(--motion-medium, 320ms) var(--ease, ease); }
 }
 @keyframes note-in { from { opacity: 0; transform: translateY(4px); } to { opacity: .9; transform: none; } }
 
