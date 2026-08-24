@@ -1,6 +1,6 @@
 "use client";
 
-import { MutableRefObject, RefObject, useCallback, useRef, useState } from "react";
+import { MutableRefObject, RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { Group, MathUtils } from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows } from "@react-three/drei";
@@ -24,6 +24,8 @@ export interface WorkspaceInteractions {
   onLaptopOpen?: () => void;
   /** Notebook easter egg — pressing or dragging the notebook turns a page. */
   onNotebookTurn?: () => void;
+  /** Circuit board easter egg — clicking the board powers it up. */
+  onPcbPower?: (powered: boolean) => void;
 }
 
 function clamp(value: number, limit: number) {
@@ -52,10 +54,20 @@ export function WorkspaceScene({
   // The LED is the only hover state that must reach the material, so it is the one
   // piece of React state here; everything else stays in the render loop.
   const [led, setLed] = useState(false);
+  // Discrete on/off, not per-frame input, so React state is the right home for it.
+  // The boot ramp it drives lives in the frame loop inside `PCB`.
+  const [powered, setPowered] = useState(false);
   // Notebook drag. Held in refs because pointer movement is high-frequency input
   // and must never reach React state.
   const notebookTilt = useRef({ x: 0, z: 0 });
   const notebookDrag = useRef({ active: false, originX: 0, originY: 0 });
+
+  // Report power state from an effect rather than from inside the state updater:
+  // updaters must stay pure, and notifying a parent from one is skipped by React.
+  const onPcbPower = interactions?.onPcbPower;
+  useEffect(() => {
+    onPcbPower?.(powered);
+  }, [powered, onPcbPower]);
 
   const hint = useCallback(
     (label: string | null) => {
@@ -122,16 +134,16 @@ export function WorkspaceScene({
       // own clear space and reads as the focal point.
       setGroup(portrait, [0.92, 0.5, -0.3], [0.2, 0.12, -0.45], [0, -0.03, 0], 0.025);
       // Left column, shared -0.2 y-rotation: one stack, consistent perspective.
-      setGroup(notebook, [-1.58, -0.06, 0.34], [1.92, 0.82, -0.08], [1.0, -0.2, 0.16], 0.028, notebookTilt.current);
+      setGroup(notebook, [-1.74, 0.32, 0.34], [1.92, 0.82, -0.08], [1.2, -0.2, 0.16], 0.028, notebookTilt.current);
       setGroup(laptop, [-1.3, -1.16, 0.66], [-1.75, -0.78, -0.12], [0.05, -0.2, -0.04], 0.032);
       // Upper-left gap: the top-right is occupied by the "Currently building" HTML card.
-      setGroup(coffee, [-1.44, 1.16, 0.44], [-1.82, 0.88, 0], [-0.15, 0.16, -0.12], 0.035);
+      setGroup(coffee, [-1.44, 1.16, 0.44], [-1.82, 0.88, 0], [0.34, 0.16, -0.12], 0.035);
       // Second personal object, sitting at the base of the arc. The low centre gap
       // is the only slot wide enough for the headband — upper-left fouls the hero
       // copy and the notebook, which is why the earlier attempt was pulled.
-      setGroup(headphones, [0.46, -1.72, 0.58], [0.15, -1.82, -0.05], [0.26, 0.42, -0.12], 0.03);
+      setGroup(headphones, [2.45, -0.25, 0.5], [0.15, -1.82, -0.05], [0.26, 0.42, -0.12], 0.03);
       // Right arm of the arc, clear of the portrait's lower edge.
-      setGroup(pcb, [1.86, -1.24, 0.48], [1.95, -0.82, 0.05], [0.5, 0.24, -0.1], 0.042);
+      setGroup(pcb, [1.58, -1.12, 0.48], [1.95, -0.82, 0.05], [0.36, 0.2, -0.1], 0.042);
     } else {
       setGroup(portrait, [0, 0.55, 0], [0, 0.1, -0.5], [0, 0, 0], 0.018);
       setGroup(laptop, [0, -1.72, 0.35], [-0.7, -1.05, 0], [-0.12, -0.05, 0], 0.02);
@@ -164,8 +176,20 @@ export function WorkspaceScene({
           <Laptop compact={compact} />
         </group>
 
-        <group ref={pcb} onPointerOver={() => { setLed(true); hint("HOVER"); }} onPointerOut={() => { setLed(false); hint(null); }}>
-          <PCB compact={compact} lit={led} />
+        <group
+          ref={pcb}
+          onPointerOver={() => { setLed(true); hint(powered ? "POWER OFF" : "POWER ON"); }}
+          onPointerOut={() => { setLed(false); hint(null); }}
+          onClick={(event) => {
+            event.stopPropagation();
+            const next = !powered;
+            setPowered(next);
+            // Update the label in the same beat, or it reads the old state until
+            // the pointer leaves and comes back.
+            hint(next ? "POWER OFF" : "POWER ON");
+          }}
+        >
+          <PCB compact={compact} lit={led} powered={powered} />
         </group>
 
         {!compact && (
@@ -191,7 +215,7 @@ export function WorkspaceScene({
               notebookTilt.current.z = clamp((notebookDrag.current.originX - event.point.x) * 0.7, 0.24);
             }}
           >
-            <Notebook />
+            <Notebook scale={0.62} />
           </group>
         )}
 

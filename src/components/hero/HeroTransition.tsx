@@ -8,7 +8,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { siteConfig } from "@/content/site";
 import { projects } from "@/content/projects";
-import { coffeeNotes, notebookNotes, workspaceNotes } from "@/content/microcopy";
+import { coffeeNotes, notebookNotes, pcbNotes, workspaceNotes } from "@/content/microcopy";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { WorkspaceFallback } from "@/components/hero/WorkspaceFallback";
@@ -40,6 +40,7 @@ export function HeroTransition() {
   const hintRef = useRef<CursorHintHandle>(null);
   const [coffeeStep, setCoffeeStep] = useState(-1);
   const [notebookStep, setNotebookStep] = useState(-1);
+  const [pcbNote, setPcbNote] = useState<string | null>(null);
   const [activeNote, setActiveNote] = useState(0);
 
   // Rotate the workspace annotations so only one is ever on screen.
@@ -60,6 +61,7 @@ export function HeroTransition() {
       onCoffeeClick: () => setCoffeeStep((step) => Math.min(step + 1, coffeeNotes.length - 1)),
       onLaptopOpen: () => window.dispatchEvent(new CustomEvent("workspace:open-terminal")),
       onNotebookTurn: () => setNotebookStep((step) => Math.min(step + 1, notebookNotes.length - 1)),
+      onPcbPower: (on: boolean) => setPcbNote(on ? pcbNotes[1] : null),
     }),
     [],
   );
@@ -172,6 +174,7 @@ export function HeroTransition() {
             ))}
             {coffeeStep >= 0 && <span className="workspace-note workspace-note-coffee" data-active="true">{coffeeNotes[coffeeStep]}</span>}
             {notebookStep >= 0 && <span className="workspace-note workspace-note-notebook" data-active="true">{notebookNotes[notebookStep]}</span>}
+            {pcbNote && <span className="workspace-note workspace-note-pcb" data-active="true">{pcbNote}</span>}
           </div>
         )}
 

@@ -1710,9 +1710,17 @@ em {
   color: var(--accent-2);
 }
 .workspace-note-notebook[data-active="true"] { opacity: .9; }
+.workspace-note-pcb {
+  /* Sits beside the circuit board on the lower right of the scene. */
+  right: 5%;
+  bottom: 18%;
+  color: var(--accent-2);
+}
+.workspace-note-pcb[data-active="true"] { opacity: .9; }
 @media (prefers-reduced-motion: no-preference) {
   .workspace-note-coffee,
-  .workspace-note-notebook { animation: note-in var(--motion-medium, 320ms) var(--ease, ease); }
+  .workspace-note-notebook,
+  .workspace-note-pcb { animation: note-in var(--motion-medium, 320ms) var(--ease, ease); }
 }
 @keyframes note-in { from { opacity: 0; transform: translateY(4px); } to { opacity: .9; transform: none; } }
 

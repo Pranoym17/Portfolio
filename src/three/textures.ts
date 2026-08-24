@@ -76,7 +76,7 @@ export function screenTexture() {
     roundRect(ctx, 64, 228, 392, 26, 6);
     ctx.fill();
 
-    ctx.fillStyle = "rgba(243, 237, 229, 0.34)";
+    ctx.fillStyle = "rgba(255, 249, 240, 0.6)";
     [292, 322, 352].forEach((y, i) => {
       roundRect(ctx, 64, y, [470, 430, 330][i], 12, 5);
       ctx.fill();
@@ -194,58 +194,256 @@ export function keyboardTexture() {
 }
 
 /** Copper trace artwork for the PCB top face. */
-export function pcbTexture() {
-  return make("pcb", 512, 336, (ctx) => {
-    ctx.fillStyle = "#2f1e15";
-    ctx.fillRect(0, 0, 512, 336);
+/* ---------------------------------------------------------------------------
+ * PCB artwork.
+ *
+ * A board reads as fake when traces bend at arbitrary angles and pads sit at
+ * random. Real layouts obey conventions, so this geometry is generated from
+ * them rather than hand-placed:
+ *   - traces bend only at 45 degrees, never at an arbitrary angle
+ *   - signals leave a chip as parallel bundles at a constant pitch
+ *   - vias stitch the ground pour on a regular grid
+ *   - every part has a silkscreen outline and a reference designator
+ *
+ * The same geometry drives the glow map, so the powered-up trace animation
+ * lines up exactly with the copper underneath it.
+ * ------------------------------------------------------------------------- */
 
-    // Subtle soldermask mottling so the surface is not perfectly flat.
-    for (let i = 0; i < 220; i += 1) {
-      ctx.fillStyle = `rgba(255, 241, 226, ${Math.random() * 0.025})`;
-      ctx.fillRect(Math.random() * 512, Math.random() * 336, 3, 3);
+const PCB_W = 1024;
+const PCB_H = 672;
+
+type Pt = [number, number];
+
+/** A 45-degree-only route for a mostly-horizontal run: straight, diagonal, straight. */
+function route45(x1: number, y1: number, x2: number, y2: number): Pt[] {
+  const span = Math.abs(y2 - y1);
+  const dir = x2 >= x1 ? 1 : -1;
+  const slack = Math.max(0, Math.abs(x2 - x1) - span) / 2;
+  const a = x1 + dir * slack;
+  const b = a + dir * span;
+  return [[x1, y1], [a, y1], [b, y2], [x2, y2]];
+}
+
+/** The same, for a mostly-vertical run. */
+function route45V(x1: number, y1: number, x2: number, y2: number): Pt[] {
+  const span = Math.abs(x2 - x1);
+  const dir = y2 >= y1 ? 1 : -1;
+  const slack = Math.max(0, Math.abs(y2 - y1) - span) / 2;
+  const a = y1 + dir * slack;
+  const b = a + dir * span;
+  return [[x1, y1], [x1, a], [x2, b], [x2, y2]];
+}
+
+/** Parallel bundle at a fixed pitch — how a bus actually leaves a chip. */
+function bus(x1: number, y1: number, x2: number, y2: number, count: number, pitch: number): Pt[][] {
+  return Array.from({ length: count }, (_, i) => route45(x1, y1 + i * pitch, x2, y2 + i * pitch));
+}
+
+function busV(x1: number, y1: number, x2: number, y2: number, count: number, pitch: number): Pt[][] {
+  return Array.from({ length: count }, (_, i) => route45V(x1 + i * pitch, y1, x2 + i * pitch, y2));
+}
+
+const IC = {
+  u1: { x: 138, y: 236, w: 186, h: 178, label: "U1", sub: "MCU" },
+  u2: { x: 556, y: 96, w: 138, h: 104, label: "U2", sub: "RF" },
+  u3: { x: 648, y: 392, w: 172, h: 128, label: "U3", sub: "PWR" },
+};
+
+/** Signal traces — thin copper. */
+const PCB_SIGNALS: Pt[][] = [
+  ...bus(IC.u1.x + IC.u1.w, 268, IC.u2.x, 118, 5, 19),
+  ...bus(IC.u1.x + IC.u1.w, 350, IC.u3.x, 416, 6, 19),
+  ...busV(700, IC.u3.y + IC.u3.h, 700, 634, 6, 22),
+  ...bus(IC.u2.x + IC.u2.w, 122, 972, 214, 4, 20),
+  ...bus(IC.u1.x, 300, 52, 214, 4, 20),
+];
+
+/** Power rails — wide copper, routed around the board edge. */
+const PCB_RAILS: Pt[][] = [
+  [[52, 60], [880, 60], [948, 128], [948, 300]],
+  [[52, 612], [300, 612], [340, 572], [612, 572]],
+];
+
+const PCB_VIAS: Pt[] = (() => {
+  const out: Pt[] = [];
+  const clear = (x: number, y: number, box: { x: number; y: number; w: number; h: number }) =>
+    x > box.x - 24 && x < box.x + box.w + 24 && y > box.y - 24 && y < box.y + box.h + 24;
+  for (let x = 60; x <= PCB_W - 60; x += 68) {
+    for (let y = 96; y <= PCB_H - 96; y += 68) {
+      if (clear(x, y, IC.u1) || clear(x, y, IC.u2) || clear(x, y, IC.u3)) continue;
+      out.push([x, y]);
+    }
+  }
+  return out;
+})();
+
+/** Two-pad SMD footprints with their reference designators. */
+const PCB_PASSIVES: Array<{ x: number; y: number; label: string; vertical?: boolean }> = [
+  { x: 404, y: 236, label: "R1" },
+  { x: 404, y: 300, label: "R2" },
+  { x: 470, y: 268, label: "C1", vertical: true },
+  { x: 372, y: 466, label: "C2" },
+  { x: 480, y: 520, label: "R3" },
+  { x: 880, y: 396, label: "C3", vertical: true },
+  { x: 224, y: 528, label: "R4" },
+  { x: 300, y: 152, label: "C4" },
+];
+
+/** Gold edge-connector fingers along the bottom edge. */
+const PCB_FINGERS = Array.from({ length: 9 }, (_, i) => 316 + i * 44);
+
+function pcbStroke(ctx: CanvasRenderingContext2D, paths: Pt[][], width: number) {
+  ctx.lineWidth = width;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  paths.forEach((path) => {
+    ctx.beginPath();
+    path.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+    ctx.stroke();
+  });
+}
+
+/** The copper layer: what the board looks like unpowered. */
+export function pcbTexture() {
+  return make("pcb", PCB_W, PCB_H, (ctx) => {
+    ctx.fillStyle = "#150d08";
+    ctx.fillRect(0, 0, PCB_W, PCB_H);
+
+    // Hatched ground pour. Real boards show this as a regular crosshatch.
+    ctx.strokeStyle = "rgba(224, 170, 116, 0.20)";
+    ctx.lineWidth = 1.4;
+    for (let i = -PCB_H; i < PCB_W; i += 16) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + PCB_H, PCB_H);
+      ctx.stroke();
     }
 
-    ctx.strokeStyle = "#c98a54";
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+    // Soldermask mottling so the surface is not perfectly flat.
+    for (let i = 0; i < 320; i += 1) {
+      ctx.fillStyle = "rgba(255, 241, 226, " + (Math.random() * 0.022).toFixed(4) + ")";
+      ctx.fillRect(Math.random() * PCB_W, Math.random() * PCB_H, 3, 3);
+    }
 
-    const traces: Array<Array<[number, number]>> = [
-      [[40, 60], [150, 60], [178, 88], [178, 190], [206, 218], [330, 218]],
-      [[40, 110], [110, 110], [140, 140], [300, 140], [326, 114], [468, 114]],
-      [[62, 286], [62, 232], [96, 198], [230, 198], [258, 170], [400, 170]],
-      [[470, 250], [372, 250], [344, 278], [180, 278]],
-      [[214, 44], [214, 96], [246, 128], [430, 128]],
-    ];
-    traces.forEach((path, index) => {
-      ctx.lineWidth = index % 2 === 0 ? 5 : 3.4;
-      ctx.globalAlpha = index % 2 === 0 ? 0.9 : 0.62;
+    ctx.strokeStyle = "#f0c58c";
+    pcbStroke(ctx, PCB_SIGNALS, 7);
+    ctx.strokeStyle = "#ffe0b4";
+    pcbStroke(ctx, PCB_RAILS, 15);
+
+    // Via stitching.
+    PCB_VIAS.forEach(([x, y]) => {
+      ctx.fillStyle = "#f0c58c";
       ctx.beginPath();
-      path.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#120b06";
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Edge connector.
+    PCB_FINGERS.forEach((x) => {
+      ctx.fillStyle = "#ffd9a0";
+      ctx.fillRect(x, PCB_H - 46, 26, 46);
+    });
+
+    // SMD passives: two pads, a silkscreen box, a designator.
+    ctx.textBaseline = "middle";
+    PCB_PASSIVES.forEach(({ x, y, label, vertical }) => {
+      const w = vertical ? 22 : 46;
+      const h = vertical ? 46 : 22;
+      ctx.strokeStyle = "rgba(255, 249, 240, 0.4)";
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(x - w / 2 - 5, y - h / 2 - 5, w + 10, h + 10);
+      ctx.fillStyle = "#ffd9a0";
+      if (vertical) {
+        ctx.fillRect(x - 11, y - 23, 22, 15);
+        ctx.fillRect(x - 11, y + 8, 22, 15);
+      } else {
+        ctx.fillRect(x - 23, y - 11, 15, 22);
+        ctx.fillRect(x + 8, y - 11, 15, 22);
+      }
+      ctx.fillStyle = "rgba(255, 249, 240, 0.75)";
+      ctx.font = "600 15px ui-monospace, monospace";
+      ctx.fillText(label, x - w / 2 - 4, y - h / 2 - 16);
+    });
+
+    // IC silkscreen: outline, pin-1 notch, pin rows, designator and function.
+    Object.values(IC).forEach(({ x, y, w, h, label, sub }) => {
+      ctx.strokeStyle = "rgba(255, 249, 240, 0.7)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, w, h);
+      ctx.beginPath();
+      ctx.arc(x + 18, y + 18, 7, 0, Math.PI * 2);
       ctx.stroke();
-    });
-    ctx.globalAlpha = 1;
-
-    // Vias / pads.
-    const pads: Array<[number, number]> = [
-      [40, 60], [330, 218], [468, 114], [400, 170], [180, 278], [430, 128], [62, 286], [214, 44],
-    ];
-    pads.forEach(([x, y]) => {
-      ctx.fillStyle = "#d7a665";
-      ctx.beginPath();
-      ctx.arc(x, y, 7.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#2f1e15";
-      ctx.beginPath();
-      ctx.arc(x, y, 3.2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = "#ffd9a0";
+      const pins = Math.max(4, Math.floor(h / 26));
+      for (let i = 0; i < pins; i += 1) {
+        const py = y + 18 + i * ((h - 36) / Math.max(1, pins - 1)) - 5;
+        ctx.fillRect(x - 15, py, 15, 10);
+        ctx.fillRect(x + w, py, 15, 10);
+      }
+      ctx.fillStyle = "rgba(255, 252, 246, 0.92)";
+      ctx.font = "700 20px ui-monospace, monospace";
+      ctx.fillText(label, x + 34, y + 24);
+      ctx.font = "600 14px ui-monospace, monospace";
+      ctx.fillStyle = "rgba(255, 249, 240, 0.6)";
+      ctx.fillText(sub, x + 34, y + 46);
     });
 
-    // Silkscreen outlines where the components sit.
-    ctx.strokeStyle = "rgba(243, 237, 229, 0.26)";
-    ctx.lineWidth = 1.6;
-    ([[92, 132, 78, 56], [252, 74, 66, 48], [352, 196, 84, 60]] as Array<[number, number, number, number]>).forEach(
-      ([x, y, w, h]) => ctx.strokeRect(x, y, w, h),
-    );
+    // Mounting holes.
+    ([[46, 46], [PCB_W - 46, 46], [46, PCB_H - 46], [PCB_W - 46, PCB_H - 46]] as Pt[]).forEach(([x, y]) => {
+      ctx.fillStyle = "#c98a54";
+      ctx.beginPath();
+      ctx.arc(x, y, 17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1b1109";
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Board legend.
+    ctx.fillStyle = "rgba(255, 249, 240, 0.7)";
+    ctx.font = "600 17px ui-monospace, monospace";
+    ctx.fillText("PM-01  REV A", 84, PCB_H - 76);
+    ctx.fillText("BUILT > BOUGHT", 706, 642);
+  });
+}
+
+/**
+ * Emissive companions to `pcbTexture`. The same trace geometry drawn as light on
+ * black, so raising a material's emissive intensity lights the copper along its
+ * real path instead of glowing the whole board.
+ *
+ * Rails and signals are separate layers on purpose: the power-up sequence brings
+ * the rails alive first and the data lines a beat later, which is what makes it
+ * read as a board booting rather than a panel fading up.
+ */
+export function pcbRailGlowTexture() {
+  return make("pcb-glow-rail", PCB_W, PCB_H, (ctx) => {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, PCB_W, PCB_H);
+    ctx.strokeStyle = "#ffb27a";
+    pcbStroke(ctx, PCB_RAILS, 15);
+    ctx.fillStyle = "#ffc596";
+    PCB_FINGERS.forEach((x) => ctx.fillRect(x, PCB_H - 46, 26, 46));
+  });
+}
+
+export function pcbSignalGlowTexture() {
+  return make("pcb-glow-signal", PCB_W, PCB_H, (ctx) => {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, PCB_W, PCB_H);
+    ctx.strokeStyle = "#ff6a3d";
+    pcbStroke(ctx, PCB_SIGNALS, 7);
+    ctx.fillStyle = "#ff8a52";
+    PCB_VIAS.forEach(([x, y]) => {
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
   });
 }
 

@@ -29,5 +29,14 @@ export const notebookNotes = [
   "A few did. They are in the work section.",
 ] as const;
 
+/**
+ * Circuit board easter egg: clicking the board powers it up. Rails come alive,
+ * the signal traces follow, then the status LEDs light in sequence.
+ */
+export const pcbNotes = [
+  "Rails up. Clock stable.",
+  "Board is alive.",
+] as const;
+
 /** Shown after the Konami code. Deliberately understated — no score, no game. */
 export const konamiNote = "↑↑↓↓←→←→BA — nothing unlocked. Just respect.";

@@ -4,11 +4,11 @@ import { useMemo } from "react";
 import { RoundedBox } from "@react-three/drei";
 import { notebookTexture } from "@/three/textures";
 
-export function Notebook() {
+export function Notebook({ scale = 0.72 }: { scale?: number }) {
   const sketch = useMemo(() => notebookTexture(), []);
 
   return (
-    <group scale={0.72}>
+    <group scale={scale}>
       {/* Cover: slightly larger footprint than the page block. */}
       <RoundedBox args={[1.46, 0.055, 1.86]} radius={0.03} smoothness={4} position={[0, -0.04, 0]}>
         <meshStandardMaterial color="#3a2a20" roughness={0.82} metalness={0.06} />
