@@ -11,7 +11,7 @@ test("mobile keeps content direct", async ({ page }, testInfo) => {
 test("reduced motion keeps portfolio content visible", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Shared AI Memory Layer" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cortex Lab" }).first()).toBeVisible();
   await page.locator("#experience").scrollIntoViewIfNeeded();
   await expect(page.getByRole("heading", { level: 2, name: /Learning by/i })).toBeVisible();
 });

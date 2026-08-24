@@ -8,9 +8,10 @@ export const siteConfig = {
   role: "Computer Engineering",
   location: "Toronto, Canada",
   availability: "Open to opportunities",
-  heroLead: "I build software, intelligent systems and ambitious digital products.",
+  heroLead:
+    "I build systems that run in production, from GPU inference on AWS to a payments ledger that works on feature phones.",
   about:
-    "I am a Computer Engineering student who likes turning ambitious ideas into working systems. I care about the whole path from architecture and implementation to the final experience people actually use.",
+    "Third-year Computer Engineering student at McMaster. Most of what I build ends up deployed and used: a cloud research platform, an internship alert service with real users, an embedded scanner that maps rooms. I like owning the whole path, from the architecture call to the thing someone opens in a browser.",
   email: "pranoym101@gmail.com",
   github: "https://github.com/Pranoym17",
   linkedin: "https://www.linkedin.com/in/pranoy-mukherjee/",

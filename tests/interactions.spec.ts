@@ -23,7 +23,9 @@ test("terminal runs help and the hire easter egg scrolls to contact", async ({ p
   await input.fill("sudo hire pranoy");
   await input.press("Enter");
   await expect(page.getByText(/Access granted/i)).toBeVisible();
-  await expect(page.locator("#contact")).toBeInViewport({ timeout: 5000 });
+  // Smooth-scrolls the full page height, which grew with the real content, so this
+  // needs headroom well past the animation itself when the suite runs under load.
+  await expect(page.locator("#contact")).toBeInViewport({ timeout: 20000 });
 });
 
 test("terminal rejects unknown commands without executing them", async ({ page }) => {
@@ -63,7 +65,7 @@ test("copy email confirms then reverts", async ({ page, context, browserName }) 
 test("project X-Ray exposes the architecture diagram", async ({ page }) => {
   await page.goto("/#work");
   const project = page.locator("[data-project-card]").first();
-  await project.getByRole("button", { name: /Shared AI Memory Layer/i }).click();
+  await project.getByRole("button", { name: /Cortex Lab/i }).click();
   await expect(project).toHaveAttribute("data-expanded", "true");
 
   // The card is still moving under GSAP Flip right after expanding, so retry the

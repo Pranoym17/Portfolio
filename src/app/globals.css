@@ -517,6 +517,15 @@ em {
   letter-spacing: .08em;
 }
 
+/* Hero-only decoration, grouped so the handoff can fade it as one. Absolute and
+   inert, so wrapping the children changes neither their coordinates nor hit areas. */
+.hero-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
 .scroll-cue {
   position: absolute;
   left: var(--page);
@@ -939,7 +948,14 @@ em {
 
 .architecture-edges { color: rgba(255,218,198,.36); }
 .architecture-edges path { fill: none; stroke: currentColor; stroke-width: .42; vector-effect: non-scaling-stroke; }
-.architecture-packet { fill: var(--accent); filter: drop-shadow(0 0 4px rgba(255,75,43,.7)); }
+.architecture-packet {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.4px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px rgba(255,75,43,.7));
+}
 
 .architecture-node {
   position: absolute;

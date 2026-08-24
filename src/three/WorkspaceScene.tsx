@@ -137,7 +137,7 @@ export function WorkspaceScene({
       setGroup(notebook, [-1.74, 0.32, 0.34], [1.92, 0.82, -0.08], [1.2, -0.2, 0.16], 0.028, notebookTilt.current);
       setGroup(laptop, [-1.3, -1.16, 0.66], [-1.75, -0.78, -0.12], [0.05, -0.2, -0.04], 0.032);
       // Upper-left gap: the top-right is occupied by the "Currently building" HTML card.
-      setGroup(coffee, [-1.44, 1.16, 0.44], [-1.82, 0.88, 0], [0.34, 0.16, -0.12], 0.035);
+      setGroup(coffee, [-1.14, 1.44, 0.44], [-1.82, 0.88, 0], [0.34, 0.16, -0.12], 0.035);
       // Second personal object, sitting at the base of the arc. The low centre gap
       // is the only slot wide enough for the headband — upper-left fouls the hero
       // copy and the notebook, which is why the earlier attempt was pulled.

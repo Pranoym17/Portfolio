@@ -16,7 +16,7 @@ function monogram(organization: string) {
 export function ExperienceTimeline() {
   return (
     <section id="experience" className="page-section experience-section">
-      <SectionHeader index="03" label="EXPERIENCE">
+      <SectionHeader index="02" label="EXPERIENCE">
         Learning by <em>building.</em>
       </SectionHeader>
       <div className="experience-layout">

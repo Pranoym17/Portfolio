@@ -44,7 +44,7 @@ export function SelectedWork() {
 
   return (
     <section id="work" className="page-section work-section">
-      <SectionHeader index="02" label="SELECTED WORK">
+      <SectionHeader index="03" label="SELECTED WORK">
         Things I&apos;ve actually <em>brought to life.</em>
       </SectionHeader>
 

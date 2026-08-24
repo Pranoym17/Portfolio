@@ -32,6 +32,7 @@ export function HeroTransition() {
   const heroCopyRef = useRef<HTMLDivElement>(null);
   const floatCardRef = useRef<HTMLDivElement>(null);
   const bentoRef = useRef<HTMLDivElement>(null);
+  const heroDecorRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const reducedMotion = useReducedMotion();
   const compact = useMediaQuery("(max-width: 820px)");
@@ -81,6 +82,7 @@ export function HeroTransition() {
     const canvas = canvasWrapRef.current;
     const bento = bentoRef.current;
     const floatCard = floatCardRef.current;
+    const decor = heroDecorRef.current;
     if (!section || !pin || !copy || !canvas || !bento || !floatCard) return;
 
     const compactNow = window.matchMedia("(max-width: 820px)").matches;
@@ -88,6 +90,7 @@ export function HeroTransition() {
       gsap.set(copy, { autoAlpha: 1, y: 0 });
       gsap.set(canvas, { autoAlpha: 1, scale: 1 });
       gsap.set(floatCard, { autoAlpha: 1 });
+      if (decor) gsap.set(decor, { autoAlpha: 1 });
       gsap.set(bento, { autoAlpha: 1, y: 0, pointerEvents: "auto" });
       progressRef.current = 0;
       return;
@@ -119,6 +122,12 @@ export function HeroTransition() {
       .to(canvas, { autoAlpha: 0, scale: 0.84, duration: 0.24 }, 0.66)
       .to(copy, { autoAlpha: 0, duration: 0.12 }, 0.62);
 
+    // The scroll cue, baseline and workspace annotations belong to the hero only.
+    // Without this they hold full opacity through the handoff and bleed over the
+    // section that follows.
+    if (decor) timeline.to(decor, { autoAlpha: 0, duration: 0.14 }, 0.04);
+    timeline.to(".workspace-notes", { autoAlpha: 0, duration: 0.18 }, 0.3);
+
     return () => timeline.scrollTrigger?.kill();
   }, { scope: sectionRef, dependencies: [reducedMotion, compact] });
 
@@ -128,7 +137,6 @@ export function HeroTransition() {
     <section ref={sectionRef} id="home" className={`hero-transition-section ${reducedMotion || compact ? "hero-static" : ""}`} aria-label="Introduction and portfolio snapshot">
       <div ref={pinRef} className="hero-pin">
         <div className="hero-ambient" aria-hidden="true" />
-        <div className="hero-grid-line" aria-hidden="true" />
 
         <div ref={heroCopyRef} className="hero-copy" data-hero-copy>
           <div className="eyebrow"><span>01</span><span>/</span><span>HELLO</span></div>
@@ -227,7 +235,10 @@ export function HeroTransition() {
           </article>
         </div>
 
-        <div className="scroll-cue" aria-hidden="true"><span>SCROLL</span><i /></div>
+        <div ref={heroDecorRef} className="hero-decor" aria-hidden="true">
+          <div className="hero-grid-line" />
+          <div className="scroll-cue"><span>SCROLL</span><i /></div>
+        </div>
         <CursorHint ref={hintRef} />
       </div>
     </section>

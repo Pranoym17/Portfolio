@@ -15,9 +15,9 @@ export default function HomePage() {
   return (
     <main>
       <HeroTransition />
+      <ExperienceTimeline />
       <SelectedWork />
       <CurrentlyBuildingStrip />
-      <ExperienceTimeline />
       <SkillsGrid />
       <AboutSection />
       <ContactSection formEnabled={contactFormEnabled} />

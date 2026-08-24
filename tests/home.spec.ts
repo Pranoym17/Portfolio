@@ -13,7 +13,7 @@ test("core recruiter path is visible and navigable", async ({ page }, testInfo) 
     await page.getByRole("link", { name: "Projects", exact: true }).click();
   }
   await expect(page.getByRole("heading", { level: 2, name: /brought to life/i })).toBeVisible();
-  await expect(page.locator("#work").getByRole("heading", { level: 3, name: "Shared AI Memory Layer" })).toBeVisible();
+  await expect(page.locator("#work").getByRole("heading", { level: 3, name: "Cortex Lab" })).toBeVisible();
 });
 
 // Expanding a project and switching to X-Ray is covered in interactions.spec.ts,
@@ -29,7 +29,7 @@ test("command palette opens from keyboard", async ({ page }) => {
   }).toPass({ timeout: 15000 });
   const input = page.getByRole("textbox", { name: "Search portfolio commands" });
   await input.fill("hardware");
-  await expect(page.getByRole("button", { name: /Edge Vision Controller/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Spatial Mapping System/i })).toBeVisible();
   await page.keyboard.press("Escape");
 });
 
