@@ -76,7 +76,9 @@ export function SelectedWork() {
                 </div>
                 <div className="project-preview">
                   <Image
-                    src={project.image}
+                    // The collapsed card is small, so it gets the tight crop; the
+                    // full interface shot only reads once the card is open.
+                    src={isExpanded && project.imageExpanded ? project.imageExpanded : project.image}
                     alt={`Visual preview for ${project.title}`}
                     fill
                     sizes="(max-width: 820px) 92vw, 46vw"

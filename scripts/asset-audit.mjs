@@ -5,7 +5,7 @@ const root = process.cwd();
 const publicDir = path.join(root, "public");
 const projectsFile = path.join(root, "src/content/projects.ts");
 const source = fs.readFileSync(projectsFile, "utf8");
-const paths = [...source.matchAll(/image:\s*["'](\/projects\/[^"']+)["']/g)].map((match) => match[1]);
+const paths = [...source.matchAll(/image(?:Expanded)?:\s*["'](\/projects\/[^"']+)["']/g)].map((match) => match[1]);
 const failures = [];
 
 for (const assetPath of paths) {

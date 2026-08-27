@@ -19,6 +19,7 @@ export const projects: Project[] = [
     outcome:
       "Deployed at cortex-lab.uk on Terraform-managed AWS infrastructure, with 245 backend tests passing and 3 integration tests skipped.",
     image: "/projects/cortex-lab.webp",
+    imageExpanded: "/projects/cortex-lab-expanded.webp",
     accent: "#ff4b2b",
     status: "Live",
     github: "https://github.com/Pranoym17/in-silico-Cortex-Lab",

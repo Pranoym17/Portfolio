@@ -49,7 +49,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
           <div className="tech-row">{project.technologies.map((technology) => <span key={technology}>{technology}</span>)}</div>
         </div>
         <div className="case-study-image">
-          <Image src={project.image} alt={`Preview of ${project.title}`} fill priority sizes="(max-width: 820px) 94vw, 48vw" />
+          <Image src={project.imageExpanded ?? project.image} alt={`Preview of ${project.title}`} fill priority sizes="(max-width: 820px) 94vw, 48vw" />
         </div>
       </header>
 

@@ -36,6 +36,12 @@ export interface Project {
   solution: string;
   outcome?: string;
   image: string;
+  /**
+   * Optional larger view, used once the card is open and on the deep-dive page.
+   * A tight crop reads best in the small collapsed card, while a full interface
+   * shot only becomes legible at the larger size. Falls back to `image`.
+   */
+  imageExpanded?: string;
   accent: string;
   status?: string;
   github?: string;
