@@ -11,7 +11,7 @@ export const projects: Project[] = [
       "A cloud-deployed neuroscience research platform. Researchers build a timed experiment out of text, image, audio, microphone and video blocks, submit it for GPU inference, watch progress stream back live, and inspect the predicted activation on an interactive 3D cortical surface. Experiments are private until explicitly published, after which they can be browsed, forked or embedded. Outputs are simulated average-subject predictions, meant for research exploration rather than diagnosis.",
     featured: true,
     technologies: ["Next.js", "TypeScript", "FastAPI", "PostgreSQL", "Celery", "AWS", "Terraform", "WebGL"],
-    role: "Architecture and full-stack implementation: frontend, API, asynchronous inference pipeline, cloud infrastructure and CI/CD.",
+    role: "Solo. Architecture and every layer of it: frontend, API, asynchronous inference pipeline, cloud infrastructure and CI/CD.",
     problem:
       "Experiment design, model inference and result visualisation for this kind of work normally live in separate tools and local scripts. That makes a study awkward to reproduce and close to impossible to hand to someone else.",
     solution:
@@ -47,7 +47,7 @@ export const projects: Project[] = [
       "Keeping private experiments, uploads and result artifacts from ever surfacing through the public library routes.",
     ],
     nextSteps: [
-      "Widen the cognitive-state classifier beyond its current eight-state artifact.",
+      "Push the cognitive-state classifier past its current fourteen-state artifact.",
       "Add richer comparison tooling across published experiments.",
     ],
   },
@@ -61,13 +61,13 @@ export const projects: Project[] = [
       "An internship discovery platform with real users. It polls community-maintained job repositories, normalises and deduplicates what it finds, matches postings against each user's filters, and delivers them as instant Telegram alerts or a curated daily email digest. Users track applications from saved through to offer, and administrators can add, preview or disable a source without touching application code.",
     featured: true,
     technologies: ["Next.js", "TypeScript", "FastAPI", "Python", "PostgreSQL", "Redis", "Supabase", "Playwright"],
-    role: "Full stack: ingestion pipeline, REST API, background workers, database security model and frontend.",
+    role: "Solo. Ingestion pipeline, REST API, background workers, database security model and frontend.",
     problem:
       "Internship postings are scattered across community-maintained repositories that each use a different table format, and the same role frequently appears in several of them at once.",
     solution:
       "An ingestion pipeline that polls each source with conditional requests, tolerates schema drift, and merges duplicates on a canonical fingerprint. Matching runs against user-defined filters and fans out to Telegram and email through a Postgres-backed job queue with idempotency keys and leased claims. Row-level security in the database sits behind the API's own ownership checks, so a mistake in one layer still cannot expose another user's data.",
     outcome:
-      "In production at sprintern.ca with real users, aggregating nine sources behind a single unified feed.",
+      "In production at sprintern.ca with real users, aggregating nine sources into a single feed of 1,000+ live postings.",
     image: "/projects/sprintern.webp",
     accent: "#ff7358",
     status: "Live",
@@ -110,7 +110,7 @@ export const projects: Project[] = [
       "A standalone embedded LIDAR-style scanner. A VL53L1X time-of-flight sensor is rotated through 360° by a stepper motor to capture one planar distance scan; moving the rig along the perpendicular axis and scanning again builds a full 3D point cloud of a hallway or room. Everything runs bare-metal in C on a TI TM4C123 (ARM Cortex-M4), with I2C to the sensor, UART to the host, and a button-driven state machine covering start/stop, rotation direction, angular step and homing.",
     featured: false,
     technologies: ["Embedded C", "ARM Cortex-M4", "I2C", "UART", "Stepper Control", "Python"],
-    role: "Firmware, hardware bring-up, serial protocol design and PC-side reconstruction.",
+    role: "Solo. Firmware, hardware bring-up, serial protocol design and PC-side reconstruction.",
     problem:
       "Commercial LIDAR is expensive. The exercise was to reach a usable indoor 3D scan using a single low-cost time-of-flight sensor, a stepper motor and a microcontroller.",
     solution:

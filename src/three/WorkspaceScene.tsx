@@ -141,7 +141,7 @@ export function WorkspaceScene({
       // Second personal object, sitting at the base of the arc. The low centre gap
       // is the only slot wide enough for the headband — upper-left fouls the hero
       // copy and the notebook, which is why the earlier attempt was pulled.
-      setGroup(headphones, [2.45, -0.25, 0.5], [0.15, -1.82, -0.05], [0.26, 0.42, -0.12], 0.03);
+      setGroup(headphones, [2.62, 0.42, 0.5], [0.15, -1.82, -0.05], [0.26, 0.42, -0.12], 0.03);
       // Right arm of the arc, clear of the portrait's lower edge.
       setGroup(pcb, [1.58, -1.12, 0.48], [1.95, -0.82, 0.05], [0.36, 0.2, -0.1], 0.042);
     } else {

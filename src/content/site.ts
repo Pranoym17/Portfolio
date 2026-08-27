@@ -19,16 +19,16 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000",
   /** PERSONALIZE: the three small cards beside the About copy. */
   personal: {
-    currentlyLearning: "Replace this with what you are genuinely learning right now.",
+    currentlyLearning: "Hand-writing CUDA kernels for Glassbox, mostly learning where the memory bandwidth actually goes.",
     interestedIn: "AI systems · software · product · hardware",
-    outsideCode: "Replace this with something real about you away from a keyboard.",
+    outsideCode: "Out walking the city, or attempting a recipe well past my skill level.",
   },
   currentlyBuilding: {
-    title: "Shared AI Memory Layer",
+    title: "Glassbox",
     description:
-      "A persistent memory layer designed to let AI tools share useful context across a workflow.",
+      "A deep learning engine in Rust with hand-written CUDA kernels: a tensor library, tape-based autograd, and a live visualizer that animates the forward and backward passes while a GPT-style model trains.",
     status: "In progress",
-    updated: "Update this line with your latest milestone",
+    updated: "Training a GPT-style model end to end on a local GPU, with every step streaming to the graph view.",
   },
 } as const;
 

@@ -4,7 +4,11 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // Local runs four browser projects fully parallel against a dev server, so
+  // animation-timing specs (the pinned hero scrub, the terminal scroll, konami)
+  // can lose frames under load and fail once. CI already allowed retries; local
+  // was stricter than CI, which is backwards.
+  retries: process.env.CI ? 2 : 1,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://127.0.0.1:3000",

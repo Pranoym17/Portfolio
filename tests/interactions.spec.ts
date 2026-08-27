@@ -23,8 +23,9 @@ test("terminal runs help and the hire easter egg scrolls to contact", async ({ p
   await input.fill("sudo hire pranoy");
   await input.press("Enter");
   await expect(page.getByText(/Access granted/i)).toBeVisible();
-  // Smooth-scrolls the full page height, which grew with the real content, so this
-  // needs headroom well past the animation itself when the suite runs under load.
+
+  // Smooth-scrolls the whole page height, which grew a lot with the real content.
+  // Re-issuing the command mid-flight only interrupts the scroll, so wait it out.
   await expect(page.locator("#contact")).toBeInViewport({ timeout: 20000 });
 });
 

@@ -52,7 +52,7 @@ export const experience: Experience[] = [
     role: "Full-Stack Developer",
     // logo: "/logos/maboko-cash.svg",
     description:
-      "Backend lead on a mobile-money wallet platform for the Democratic Republic of Congo, built for a market that transacts in Congolese Francs on feature phones as often as smartphones. Remote.",
+      "Backend lead on a four-person team building a mobile-money wallet for the Democratic Republic of Congo, where users transact in Congolese Francs on feature phones as often as smartphones. Shipped 101 REST endpoints across 19 entities, authoring roughly 84% of the codebase. Remote.",
     highlights: [
       "Architected a double-entry ledger where every transfer writes paired debit and credit entries inside one transaction, using pessimistic row locks acquired in deterministic order to eliminate deadlocks.",
       "Built a USSD channel for feature phones with a hashed idempotency key on a unique constraint, so a gateway retry replays a cached response instead of charging twice.",
